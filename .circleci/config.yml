@@ -1,53 +1,17 @@
 version: 2.1
+orbs:
+  node: circleci/node@1.1.6
 jobs:
-  build-and-deploy:
-    docker:
-      - image: circleci/node:10-buster
-
-    working_directory: ~/fantasy-drag-race
-
+  build-and-test:
+    executor:
+      name: node/default
     steps:
       - checkout
-
-      # - run:
-      #     name: Install Firebase CLI
-      #     command: curl -sL https://firebase.tools | bash
-
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            - v1-dependencies-
-
-      - run:
-          name: Install Dependencies
-          command: npm install
-
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
-
-      # Enable once ready
-      # - run:
-      #     name: Lint
-      #     command: npm run lint
-
-      # - run:
-      #     name: Run Tests
-      #     command: npm run test
-
-      - run:
-          name: Build project
-          command: npm run build
-
-      - run:
-          name: Deploy to Firebase
-          command: ~/fantasy-drag-race/node_modules/.bin/firebase deploy --token "${FIREBASE_TOKEN}"
-
+      - node/with-cache:
+          steps:
+            - run: npm install
+            - run: npm test
 workflows:
-  main:
-    jobs:
-      - build-and-deploy:
-          filters:
-            branches:
-              only: development
+    build-and-test:
+      jobs:
+        - build-and-test
